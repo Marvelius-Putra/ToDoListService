@@ -1,8 +1,8 @@
 # ToDoListService
-This API is used to make the frontend for this page
+This API is used to make the frontend of this page
 ![image](https://github.com/user-attachments/assets/215d002d-faa3-44e8-9e58-12dad95f6fd7)
 
-## The API Consist of 
+## The API consists of 
 1. **API for Login**  
 2. **API for New User Registration**  
 3. **API to Create Checklist** (based on example image 2, which shows colored boxes)  
@@ -15,5 +15,6 @@ This API is used to make the frontend for this page
 10. **API to Change the Status of To-Do Items in a Checklist** (e.g., marking items as completed)  
 11. **API to Delete To-Do Items from a Checklist**
 
-![image](https://github.com/user-attachments/assets/11674263-e7c1-43ea-9821-da8c14579046)
+![image](https://github.com/user-attachments/assets/dcafae40-8b77-48ca-82cb-7853ae14f28b)
+
 
