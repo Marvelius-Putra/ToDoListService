@@ -26,7 +26,6 @@ public class AuthFunction
     [OpenApiRequestBody("application/json", typeof(User), Required = true, Description = "User credentials")]
     [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(string), Description = "Success Response")]
 
-
     public async Task<HttpResponseData> Register(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
@@ -79,7 +78,7 @@ public class AuthFunction
             return unauthorizedResponse;
         }
 
-        string token = AuthService.GenerateJwtToken(user.Username);
+        string token = _authService.GenerateJwtToken(user.Username);
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(new { token });
         return response;
