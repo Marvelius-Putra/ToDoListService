@@ -30,9 +30,7 @@ namespace ToDoListService.Services
         }
 
         public bool DeleteChecklist(int id)
-        {
-            
-
+        {       
             var checklist = _checklists.FirstOrDefault(c => c.Id == id);
 
             if (checklist == null)

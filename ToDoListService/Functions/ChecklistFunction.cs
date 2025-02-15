@@ -33,9 +33,9 @@ namespace ToDoListService.Functions
         [OpenApiOperation(operationId: "CreateChecklist", tags: new[] { "Checklist" })]
         [OpenApiRequestBody("application/json", typeof(CreateCheckListRequest), Required = true, Description = "Checklist Title")]
         [OpenApiResponseWithBody(HttpStatusCode.Created, "application/json", typeof(Checklist), Description = "Checklist created successfully")]
-        public async Task<HttpResponseData> CreateChecklist(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+        public async Task<HttpResponseData> CreateChecklist([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
         {
+            //read json body
             var requestBody = await req.ReadFromJsonAsync<CreateCheckListRequest>();
             if (requestBody == null || string.IsNullOrWhiteSpace(requestBody.Title))
             {
@@ -44,6 +44,7 @@ namespace ToDoListService.Functions
                 return badRequestResponse;
             }
 
+            //Create the Checklist
             var checklist = _checklistService.CreateChecklist(requestBody.Title);
             _checklists.Add(checklist);
             var response = req.CreateResponse(HttpStatusCode.Created);
@@ -54,9 +55,9 @@ namespace ToDoListService.Functions
         [Function("GetAllChecklists")]
         [OpenApiOperation(operationId: "GetAllChecklists", tags: new[] { "Checklist" })]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(List<Checklist>), Description = "List of all checklists")]
-        public async Task<HttpResponseData> GetAllChecklists(
-        [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
+        public async Task<HttpResponseData> GetAllChecklists([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
         {
+            //get all checklist
             var checklists = _checklistService.GetAllChecklists();
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(checklists);
@@ -69,9 +70,9 @@ namespace ToDoListService.Functions
         [OpenApiResponseWithoutBody(HttpStatusCode.NoContent, Description = "Checklist berhasil dihapus")]
         [OpenApiResponseWithoutBody(HttpStatusCode.NotFound, Description = "Checklist tidak ditemukan")]
         public async Task<HttpResponseData> DeleteChecklist(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklist/{id}")] HttpRequestData req,
-        int id)
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklist/{id}")] HttpRequestData req, int id)
         {
+            //delete checklist by id
             bool isDeleted = _checklistService.DeleteChecklist(id);
 
             if (!isDeleted)
@@ -85,19 +86,18 @@ namespace ToDoListService.Functions
             return response;
         }
 
+        
         [Function("AddChecklistItem")]
         [OpenApiOperation(operationId: "AddChecklistItem", tags: new[] { "Checklist" })]
         [OpenApiParameter(name: "checklistId", In = ParameterLocation.Path, Required = true, Type = typeof(int), Description = "ID Checklist")]
         [OpenApiRequestBody("application/json", typeof(CheckListItemRequest), Required = true, Description = "Checklist Item Data")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(Checklist), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> AddChecklistItem(
-    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "checklists/{checklistId}/items")] HttpRequestData req,
-    int checklistId)
+        public async Task<HttpResponseData> AddChecklistItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
-            // Periksa apakah ada checklist yang tersedia
+            // Validate if checklist is not exist
             if (_checklists == null || !_checklists.Any())
             {
                 response.StatusCode = HttpStatusCode.NotFound;
@@ -105,7 +105,7 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Cari checklist berdasarkan ID
+            // Search checklist by id
             var checklist = _checklists.FirstOrDefault(c => c.Id == checklistId);
             if (checklist == null)
             {
@@ -114,7 +114,7 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Baca body request
+            // read the body request
             var requestBody = await req.ReadFromJsonAsync<CheckListItemRequest>();
             if (requestBody == null || string.IsNullOrWhiteSpace(requestBody.Name))
             {
@@ -123,18 +123,18 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Tentukan ID baru (auto increment)
+            // Auto increament ID
             int newItemId = checklist.Items.Any() ? checklist.Items.Max(i => i.Id) + 1 : 1;
 
-            // Buat item baru dengan `isCompleted` default ke `false`
+            // set isCompleted to false as default
             var newItem = new ChecklistItem
             {
                 Id = newItemId,
                 Name = requestBody.Name,
-                IsCompleted = false // Selalu false saat item baru dibuat
+                IsCompleted = false 
             };
 
-            // Tambahkan item ke checklist
+            // add item to checklist
             checklist.Items.Add(newItem);
 
             response.StatusCode = HttpStatusCode.OK;
@@ -149,12 +149,11 @@ namespace ToDoListService.Functions
         [OpenApiRequestBody("application/json", typeof(List<UpdateChecklistItemRequest>), Required = true, Description = "List of Checklist Items to Update")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(UpdateChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> UpdateMultipleChecklistItems(
-    [HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
+        public async Task<HttpResponseData> UpdateMultipleChecklistItems([HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
-            // Cari checklist berdasarkan ID
+            // find checklist by id
             var checklist = _checklists.FirstOrDefault(c => c.Id == checklistId);
             if (checklist == null)
             {
@@ -163,7 +162,7 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Baca body request (list of updates)
+            // Read the body request
             var requestBody = await req.ReadFromJsonAsync<List<UpdateChecklistItemRequest>>();
             if (requestBody == null || !requestBody.Any())
             {
@@ -172,8 +171,10 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            var ignoredItems = new List<int>(); // Menyimpan item yang tidak ditemukan
+            //ignore if item is not exist to the list
+            var ignoredItems = new List<int>(); 
 
+            //update the item
             foreach (var updateItem in requestBody)
             {
                 var item = checklist.Items.FirstOrDefault(i => i.Id == updateItem.Id);
@@ -187,7 +188,7 @@ namespace ToDoListService.Functions
                 }
             }
 
-            // Buat response object
+            // response payload
             var updateResponse = new UpdateChecklistResponse
             {
                 Checklist = checklist,
@@ -206,11 +207,11 @@ namespace ToDoListService.Functions
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(UpdateChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
         public async Task<HttpResponseData> UpdateChecklistItemStatus(
-    [HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items/status")] HttpRequestData req, int checklistId)
+        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items/status")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
-            // Cari checklist berdasarkan ID
+            // Find Checklist status by id
             var checklist = _checklists.FirstOrDefault(c => c.Id == checklistId);
             if (checklist == null)
             {
@@ -219,7 +220,7 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Baca body request (list of updates)
+            // Read Body request
             var requestBody = await req.ReadFromJsonAsync<List<UpdateChecklistItemStatusRequest>>();
             if (requestBody == null || !requestBody.Any())
             {
@@ -228,14 +229,14 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            var ignoredItems = new List<int>(); // Menyimpan item yang tidak ditemukan
+            var ignoredItems = new List<int>(); 
 
             foreach (var updateItem in requestBody)
             {
                 var item = checklist.Items.FirstOrDefault(i => i.Id == updateItem.Id);
                 if (item != null)
                 {
-                    item.IsCompleted = updateItem.IsCompleted; // Update status
+                    item.IsCompleted = updateItem.IsCompleted; 
                 }
                 else
                 {
@@ -243,7 +244,7 @@ namespace ToDoListService.Functions
                 }
             }
 
-            // Buat response object
+            // Response payload
             var updateResponse = new UpdateChecklistResponse
             {
                 Checklist = checklist,
@@ -261,13 +262,11 @@ namespace ToDoListService.Functions
         [OpenApiRequestBody("application/json", typeof(List<int>), Required = true, Description = "List of Item IDs to Delete")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(DeleteChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> DeleteChecklistItem(
-    [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklists/{checklistId}/items")] HttpRequestData req,
-    int checklistId)
+        public async Task<HttpResponseData> DeleteChecklistItem([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
-            // Cari checklist berdasarkan ID
+            // Find Checklist by id
             var checklist = _checklists.FirstOrDefault(c => c.Id == checklistId);
             if (checklist == null)
             {
@@ -276,7 +275,7 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Baca body request (list of item IDs)
+            // Read Body Request
             var requestBody = await req.ReadFromJsonAsync<List<int>>();
             if (requestBody == null || !requestBody.Any())
             {
@@ -285,24 +284,24 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            var ignoredItems = new List<int>(); // Menyimpan item yang tidak ditemukan
+            var ignoredItems = new List<int>(); 
             var initialCount = checklist.Items.Count;
 
-            // Hapus item yang ada dalam requestBody
+            // Delete Item on the checklist
             checklist.Items.RemoveAll(item =>
             {
                 if (requestBody.Contains(item.Id))
                 {
-                    return true; // Item akan dihapus
+                    return true; 
                 }
                 else
                 {
-                    ignoredItems.Add(item.Id); // Jika tidak ada, masukkan ke daftar diabaikan
+                    ignoredItems.Add(item.Id); 
                     return false;
                 }
             });
 
-            // Buat response object
+            // Response Payload
             var deleteResponse = new DeleteChecklistResponse
             {
                 Checklist = checklist,
@@ -319,13 +318,11 @@ namespace ToDoListService.Functions
         [OpenApiParameter(name: "checklistId", In = ParameterLocation.Path, Required = true, Type = typeof(int), Description = "ID Checklist")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(List<ChecklistItem>), Description = "List of items in the checklist")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> GetChecklistItems(
-    [HttpTrigger(AuthorizationLevel.Function, "get", Route = "checklists/{checklistId}/items")] HttpRequestData req,
-    int checklistId)
+        public async Task<HttpResponseData> GetChecklistItems([HttpTrigger(AuthorizationLevel.Function, "get", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
-            // Cari checklist berdasarkan ID
+            // Find Checklist by ID
             var checklist = _checklists.FirstOrDefault(c => c.Id == checklistId);
             if (checklist == null)
             {
@@ -334,13 +331,9 @@ namespace ToDoListService.Functions
                 return response;
             }
 
-            // Jika checklist ditemukan, kembalikan semua item
             response.StatusCode = HttpStatusCode.OK;
             await response.WriteAsJsonAsync(checklist.Items);
             return response;
         }
-
-
-
     }
 }

@@ -1,15 +1,11 @@
-﻿using System.Net;
-using System.Text.Json;
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Azure.Functions.Worker.Extensions.OpenApi;
-using Microsoft.OpenApi.Models;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using ToDoListService.Model;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
+using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Text;
+using System.Text.Json;
+using ToDoListService.Model;
 
 public class AuthFunction
 {
@@ -29,6 +25,7 @@ public class AuthFunction
     public async Task<HttpResponseData> Register(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
+        //get request body
         using var reader = new StreamReader(req.Body, Encoding.UTF8);
         var bodyString = await reader.ReadToEndAsync();
         var requestBody = JsonSerializer.Deserialize<User>(bodyString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -38,6 +35,7 @@ public class AuthFunction
             return req.CreateResponse(HttpStatusCode.BadRequest);
         }
 
+        //validate user
         if (_users.Any(u => u.Username == requestBody.Username))
         {
             var conflictResponse = req.CreateResponse(HttpStatusCode.Conflict);
@@ -60,10 +58,12 @@ public class AuthFunction
     public async Task<HttpResponseData> Login(
     [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
+        //get request body
         using var reader = new StreamReader(req.Body, Encoding.UTF8);
         var bodyString = await reader.ReadToEndAsync();
         var requestBody = JsonSerializer.Deserialize<User>(bodyString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
+        //validate if null
         if (requestBody == null)
         {
             return req.CreateResponse(HttpStatusCode.BadRequest);
@@ -71,6 +71,7 @@ public class AuthFunction
 
         var user = _users.FirstOrDefault(u => u.Username == requestBody.Username && u.Password == requestBody.Password);
 
+        //validate if user is wrong
         if (user == null)
         {
             var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
@@ -78,6 +79,7 @@ public class AuthFunction
             return unauthorizedResponse;
         }
 
+        //generate token
         string token = _authService.GenerateJwtToken(user.Username);
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(new { token });

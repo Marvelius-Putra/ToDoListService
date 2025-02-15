@@ -16,7 +16,6 @@ var host = new HostBuilder()
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<ICheckListService, CheckListService>();
 
-        // Tambahkan Authentication JWT
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
