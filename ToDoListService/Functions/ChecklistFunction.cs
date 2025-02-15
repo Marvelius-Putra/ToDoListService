@@ -33,7 +33,7 @@ namespace ToDoListService.Functions
         [OpenApiOperation(operationId: "CreateChecklist", tags: new[] { "Checklist" })]
         [OpenApiRequestBody("application/json", typeof(CreateCheckListRequest), Required = true, Description = "Checklist Title")]
         [OpenApiResponseWithBody(HttpStatusCode.Created, "application/json", typeof(Checklist), Description = "Checklist created successfully")]
-        public async Task<HttpResponseData> CreateChecklist([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+        public async Task<HttpResponseData> CreateChecklist([HttpTrigger(AuthorizationLevel.Function, "post", Route = "Api/Checklist")] HttpRequestData req)
         {
             //read json body
             var requestBody = await req.ReadFromJsonAsync<CreateCheckListRequest>();
@@ -55,7 +55,7 @@ namespace ToDoListService.Functions
         [Function("GetAllChecklists")]
         [OpenApiOperation(operationId: "GetAllChecklists", tags: new[] { "Checklist" })]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(List<Checklist>), Description = "List of all checklists")]
-        public async Task<HttpResponseData> GetAllChecklists([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
+        public async Task<HttpResponseData> GetAllChecklists([HttpTrigger(AuthorizationLevel.Function, "get", Route = "Api/Checklist")] HttpRequestData req)
         {
             //get all checklist
             var checklists = _checklistService.GetAllChecklists();
@@ -70,10 +70,10 @@ namespace ToDoListService.Functions
         [OpenApiResponseWithoutBody(HttpStatusCode.NoContent, Description = "Checklist berhasil dihapus")]
         [OpenApiResponseWithoutBody(HttpStatusCode.NotFound, Description = "Checklist tidak ditemukan")]
         public async Task<HttpResponseData> DeleteChecklist(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklist/{id}")] HttpRequestData req, int id)
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "Api/Checklist/{checklistId}")] HttpRequestData req, int checklistId)
         {
             //delete checklist by id
-            bool isDeleted = _checklistService.DeleteChecklist(id);
+            bool isDeleted = _checklistService.DeleteChecklist(checklistId);
 
             if (!isDeleted)
             {
@@ -93,7 +93,7 @@ namespace ToDoListService.Functions
         [OpenApiRequestBody("application/json", typeof(CheckListItemRequest), Required = true, Description = "Checklist Item Data")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(Checklist), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> AddChecklistItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
+        public async Task<HttpResponseData> AddChecklistItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = "Api/Checklists/{checklistId}/Items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
@@ -149,7 +149,7 @@ namespace ToDoListService.Functions
         [OpenApiRequestBody("application/json", typeof(List<UpdateChecklistItemRequest>), Required = true, Description = "List of Checklist Items to Update")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(UpdateChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> UpdateMultipleChecklistItems([HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
+        public async Task<HttpResponseData> UpdateMultipleChecklistItems([HttpTrigger(AuthorizationLevel.Function, "put", Route = "Api/Checklists/{checklistId}/Items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
@@ -207,7 +207,7 @@ namespace ToDoListService.Functions
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(UpdateChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
         public async Task<HttpResponseData> UpdateChecklistItemStatus(
-        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "checklists/{checklistId}/items/status")] HttpRequestData req, int checklistId)
+        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "Api/Checklists/{checklistId}/Items/Status")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
@@ -262,7 +262,7 @@ namespace ToDoListService.Functions
         [OpenApiRequestBody("application/json", typeof(List<int>), Required = true, Description = "List of Item IDs to Delete")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(DeleteChecklistResponse), Description = "Checklist Updated")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> DeleteChecklistItem([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
+        public async Task<HttpResponseData> DeleteChecklistItem([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "Api/Checklists/{checklistId}/Items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
@@ -318,7 +318,7 @@ namespace ToDoListService.Functions
         [OpenApiParameter(name: "checklistId", In = ParameterLocation.Path, Required = true, Type = typeof(int), Description = "ID Checklist")]
         [OpenApiResponseWithBody(HttpStatusCode.OK, "application/json", typeof(List<ChecklistItem>), Description = "List of items in the checklist")]
         [OpenApiResponseWithBody(HttpStatusCode.NotFound, "application/json", typeof(string), Description = "Checklist Not Found")]
-        public async Task<HttpResponseData> GetChecklistItems([HttpTrigger(AuthorizationLevel.Function, "get", Route = "checklists/{checklistId}/items")] HttpRequestData req, int checklistId)
+        public async Task<HttpResponseData> GetChecklistItems([HttpTrigger(AuthorizationLevel.Function, "get", Route = "Api/Checklists/{checklistId}/Items")] HttpRequestData req, int checklistId)
         {
             var response = req.CreateResponse();
 
